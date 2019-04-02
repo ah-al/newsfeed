@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: NewsFeed
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: aali
+Implementation-Vendor-Id: com.newsfeed
+Build-Jdk: 1.8.0_151
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
+ ot-starter-parent/NewsFeed
+Created-By: Maven Integration for Eclipse
+
