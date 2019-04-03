@@ -22,11 +22,13 @@ import com.rometools.rome.io.SyndFeedInput;
 @Component
 public class NewsFeedSource{
 
-	private static final Logger logger = LoggerFactory.getLogger(NewsFeedSource.class);
+	private static Logger logger = LoggerFactory
+		      .getLogger(NewsFeedSource.class);
+
 	private List<SyndEntry> feed;  
 	
 	public NewsFeedSource() {
-		feed = this.retrieveFeed();
+		feed = retrieveFeed();
 	}
 	
 	public List<SyndEntry> getFeed() {
@@ -72,5 +74,6 @@ public class NewsFeedSource{
 		return feed;
 
 	}
+	
 
 }
