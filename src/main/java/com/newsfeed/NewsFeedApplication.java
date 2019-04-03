@@ -36,10 +36,25 @@ public class NewsFeedApplication implements CommandLineRunner {
     @Autowired
     private ApplicationContext applicationContext;
 	
-    public void executeAsynchronously(SyndEntry entry) {
-    	SaveEntryToFileThread myThread = applicationContext.getBean(SaveEntryToFileThread.class);
-    	myThread.setEntry(entry);
-        taskExecutor.execute(myThread);
+    public void executeAsynchronously() {
+    	int increment = newsFeedSource.getFeed().size() / 5;
+    	int min = 0;
+    	int max = increment;
+    	int unEvenCount = newsFeedSource.getFeed().size() - increment * 5;
+    	for(int i = 0; i < 5; i++) {
+	    	SaveEntryToFileThread myThread = applicationContext.getBean(SaveEntryToFileThread.class);
+	    	myThread.setEntry(min, max, newsFeedSource.getFeed());
+	    	
+	    	min = max;
+	    	if (unEvenCount == 0) {
+	    		max += increment;
+	    	} else {
+	    		max += increment + 1;
+	    		unEvenCount--;
+	    	}
+	        taskExecutor.execute(myThread);
+    	}
+        ((ThreadPoolTaskExecutor)taskExecutor).shutdown();//In order to stop waiting for more threads when all threads are done.
     }
     
 	public static void main(String[] args) {
@@ -50,11 +65,7 @@ public class NewsFeedApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		
-        List<SyndEntry> feed = newsFeedSource.getFeed();
-        for (SyndEntry entry : feed) {
-        	executeAsynchronously(entry);
-        }
-        ((ThreadPoolTaskExecutor)taskExecutor).shutdown();
+       	executeAsynchronously();
 	}
 	
 }
