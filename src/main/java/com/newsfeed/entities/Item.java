@@ -1,6 +1,8 @@
 package com.newsfeed.entities;
 
-import javax.xml.bind.annotation.XmlElement;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.rometools.rome.feed.synd.SyndEntry;
@@ -24,7 +26,9 @@ public class Item {
 		setLink(entry.getLink());
 		setTitle(entry.getTitle());
 		setDescription(entry.getDescription().getValue());
-		setPubDate(entry.getPublishedDate().toString());
+		SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+		formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+		setPubDate(formatter.format(entry.getPublishedDate()));
 		setCategory(entry.getCategories().get(0).getName());
 		setComments(entry.getComments());
 		setGuid(entry.getUri());

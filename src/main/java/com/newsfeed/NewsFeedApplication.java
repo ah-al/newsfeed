@@ -1,57 +1,40 @@
 package com.newsfeed;
 
+import static com.newsfeed.utility.FileUtility.saveEntryToFile;
+
 import java.io.File;
-import java.util.List;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.Pollers;
+import org.springframework.integration.feed.inbound.FeedEntryMessageSource;
+import org.springframework.integration.scheduling.PollerMetadata;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessagingException;
 
-import com.newsfeed.thread.SaveEntryToFileThread;
 import com.rometools.rome.feed.synd.SyndEntry;
 
-@SpringBootApplication
+@SpringBootApplication()
 public class NewsFeedApplication implements CommandLineRunner {
 
-	private static Logger logger = LoggerFactory.getLogger(NewsFeedApplication.class);
+	private static Logger LOGGER = LoggerFactory.getLogger(NewsFeedApplication.class);
 	
 	@Value("${file.path}")
 	private String filePath;
 	
-	@Autowired
-	private NewsFeedSourceService newsFeedSource;
+	@Value("${source.uri}")
+	private String uri;
 
-	@Autowired
-    private TaskExecutor taskExecutor;
-	
-    public void executeAsynchronously() {
-    	List<SyndEntry> feed = newsFeedSource.getFeed();
-    	int increment = feed.size() / 5;
-    	int min = 0;
-    	int max = increment;
-    	int unEvenCount = feed.size() - increment * 5;
-    	for(int i = 0; i < 5; i++) {
-	    	SaveEntryToFileThread myThread = new SaveEntryToFileThread();
-	    	myThread.setEntry(min, max, feed, filePath);
-	    	
-	    	min = max;
-	    	if (unEvenCount == 0) {
-	    		max += increment;
-	    	} else {
-	    		max += increment + 1;
-	    		unEvenCount--;
-	    	}
-	        taskExecutor.execute(myThread);
-    	}
-        ((ThreadPoolTaskExecutor)taskExecutor).shutdown();//In order to stop waiting for more threads when all threads are done.
-    }
-    
 	public static void main(String[] args) {
 		SpringApplication.run(NewsFeedApplication.class, args);
 		
@@ -63,7 +46,24 @@ public class NewsFeedApplication implements CommandLineRunner {
 		if (!baseDirectory.exists()) {
 			baseDirectory.mkdirs();
 		}
-       	executeAsynchronously();
 	}
 	
+	@Bean(name = PollerMetadata.DEFAULT_POLLER)
+    public  PollerMetadata poller() {
+        return Pollers.fixedRate(100).maxMessagesPerPoll(5).get();
+    }
+	
+	@Bean
+	public IntegrationFlow flow() throws MalformedURLException {
+		return IntegrationFlows.from(new FeedEntryMessageSource(new URL(uri),"source"))
+				.handle(new MessageHandler() {
+
+					@Override
+					public void handleMessage(Message<?> message) throws MessagingException {
+						saveEntryToFile((SyndEntry) message.getPayload(), filePath);
+						LOGGER.info(((SyndEntry) message.getPayload()).getLink());
+					}
+				}).get();
+	}
+
 }
