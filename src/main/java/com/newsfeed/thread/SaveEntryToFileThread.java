@@ -16,7 +16,11 @@ import org.springframework.context.annotation.PropertySource;
 
 import com.newsfeed.utility.FileUtility;
 import com.rometools.rome.feed.synd.SyndEntry;
-
+/**
+ * NO LONGER NEEDED CLASS.
+ * @author aali
+ *
+ */
 @PropertySource("classpath:thread.properties")
 public class SaveEntryToFileThread implements Runnable {
 	
@@ -50,7 +54,7 @@ public class SaveEntryToFileThread implements Runnable {
 
 		        writer.close();
 		        LOGGER.info(entry.get(i).getLink());
-			} catch (IOException | JAXBException e) {
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
     	}

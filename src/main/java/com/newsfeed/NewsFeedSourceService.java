@@ -20,6 +20,11 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 
+/**
+ * NO LONGER NEEDED CLASS.
+ * @author aali
+ *
+ */
 @Service
 public class NewsFeedSourceService{
 

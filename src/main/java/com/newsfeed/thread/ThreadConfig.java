@@ -7,7 +7,11 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-
+/**
+ * NO LONGER NEEDED CLASS.
+ * @author aali
+ *
+ */
 @Configuration
 @EnableAsync
 public class ThreadConfig {
