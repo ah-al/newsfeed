@@ -13,33 +13,27 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.SyndFeedInput;
 
-@Component
-public class NewsFeedSource{
+@Service
+public class NewsFeedSourceService{
 
+	@Value("${source.uri}")
+	private String uri;
+	
 	private static Logger logger = LoggerFactory
-		      .getLogger(NewsFeedSource.class);
+		      .getLogger(NewsFeedSourceService.class);
 
-	private List<SyndEntry> feed;  
-	
-	public NewsFeedSource() {
-		feed = retrieveFeed();
-	}
-	
 	public List<SyndEntry> getFeed() {
-		return feed;
-	}
-	
-	private List<SyndEntry> retrieveFeed() {
 		List<SyndEntry> feedItems = new ArrayList<>();
 		
 		try {
-			SyndFeed feed = readFeed("https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9");
+			SyndFeed feed = readFeed(uri);
 			for (SyndEntry entry : feed.getEntries()) {
 				if (entry != null) {
 					feedItems.add(entry);
@@ -59,7 +53,7 @@ public class NewsFeedSource{
 		SyndFeed feed = null;
 		HttpGet httpGet = new HttpGet(url);
 		try (CloseableHttpClient httpClient = HttpClients.createDefault();
-				CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
+				CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {//rest template
 
 			if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 				try {

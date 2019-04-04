@@ -1,9 +1,16 @@
 package com.newsfeed.utility;
 
 import java.io.File;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+
+import com.newsfeed.entities.Item;
 import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndEntryImpl;
 
 public class FileUtility {
 
@@ -18,5 +25,23 @@ public class FileUtility {
 			fileDirectory.mkdir();
 		}
 		return fileDirectory.getAbsolutePath();
+	}
+	
+	public static String convertObjectToXML(SyndEntry entry) throws JAXBException {
+		Item item = new Item(entry);
+		
+        JAXBContext jaxbContext = JAXBContext.newInstance(Item.class);
+         
+        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+        StringWriter sw = new StringWriter();
+         
+        jaxbMarshaller.marshal(item, sw);
+         
+        return sw.toString();
+        
+		
 	}
 }

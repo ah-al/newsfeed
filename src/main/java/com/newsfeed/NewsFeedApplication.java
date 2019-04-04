@@ -1,16 +1,15 @@
 package com.newsfeed;
 
+import java.io.File;
 import java.util.List;
-
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -22,28 +21,24 @@ public class NewsFeedApplication implements CommandLineRunner {
 
 	private static Logger logger = LoggerFactory.getLogger(NewsFeedApplication.class);
 	
-	@Autowired
-	private NewsFeedSource newsFeedSource;
-
-	@PostConstruct
-	private void initialize() {
-		System.out.println("@PostConstruct");
-	}
+	@Value("${file.path}")
+	private String filePath;
 	
+	@Autowired
+	private NewsFeedSourceService newsFeedSource;
+
 	@Autowired
     private TaskExecutor taskExecutor;
 	
-    @Autowired
-    private ApplicationContext applicationContext;
-	
     public void executeAsynchronously() {
-    	int increment = newsFeedSource.getFeed().size() / 5;
+    	List<SyndEntry> feed = newsFeedSource.getFeed();
+    	int increment = feed.size() / 5;
     	int min = 0;
     	int max = increment;
-    	int unEvenCount = newsFeedSource.getFeed().size() - increment * 5;
+    	int unEvenCount = feed.size() - increment * 5;
     	for(int i = 0; i < 5; i++) {
-	    	SaveEntryToFileThread myThread = applicationContext.getBean(SaveEntryToFileThread.class);
-	    	myThread.setEntry(min, max, newsFeedSource.getFeed());
+	    	SaveEntryToFileThread myThread = new SaveEntryToFileThread();
+	    	myThread.setEntry(min, max, feed, filePath);
 	    	
 	    	min = max;
 	    	if (unEvenCount == 0) {
@@ -64,7 +59,10 @@ public class NewsFeedApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		
+		File baseDirectory  = new File(filePath);
+		if (!baseDirectory.exists()) {
+			baseDirectory.mkdirs();
+		}
        	executeAsynchronously();
 	}
 	

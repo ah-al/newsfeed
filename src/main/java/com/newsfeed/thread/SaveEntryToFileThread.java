@@ -1,28 +1,26 @@
 package com.newsfeed.thread;
 
+import static com.newsfeed.utility.FileUtility.convertObjectToXML;
+
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
 
+import javax.xml.bind.JAXBException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
 import com.newsfeed.utility.FileUtility;
 import com.rometools.rome.feed.synd.SyndEntry;
 
-@Component
-@Scope("prototype")
 @PropertySource("classpath:thread.properties")
 public class SaveEntryToFileThread implements Runnable {
 	
-	@Autowired
-    Environment env;
+	private String filesPath;
 	
     private static final Logger LOGGER = LoggerFactory.getLogger(SaveEntryToFileThread.class);
     
@@ -30,24 +28,29 @@ public class SaveEntryToFileThread implements Runnable {
     int minIndex;
     int maxIndex;
     
-    public void setEntry(int minIndex, int maxIndex, List<SyndEntry> list) {
+    public void setEntry(int minIndex, int maxIndex, List<SyndEntry> list, String filesPath) {
     	this.minIndex = minIndex;
     	this.maxIndex = maxIndex;
     	this.entry = list;
+    	this.filesPath = filesPath;
     }
     
     @Override
     public void run() {
     	for (int i = minIndex; i < maxIndex; i++) {
-	        LOGGER.info("Called from thread:" + entry.get(i).getLink());
-	        String directoryPath = FileUtility.getDirectoryPath(env.getProperty("file.path"), entry.get(i));
+	        String directoryPath = FileUtility.getDirectoryPath(filesPath, entry.get(i));
 	        Writer writer;
 			try {
 				writer = new FileWriter(directoryPath +"\\" + entry.get(i).getUri() +".xml");
-	//	        SyndFeedOutput output = new SyndFeedOutput();
-	//	        output.output(entry,writer);
+				
+				String xml = convertObjectToXML(entry.get(i));
+				PrintWriter printWriter = new PrintWriter(writer);
+				printWriter.print(xml);
+				printWriter.close();
+
 		        writer.close();
-			} catch (IOException e) {
+		        LOGGER.info(entry.get(i).getLink());
+			} catch (IOException | JAXBException e) {
 				e.printStackTrace();
 			}
     	}
