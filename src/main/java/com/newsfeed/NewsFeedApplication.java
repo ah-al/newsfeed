@@ -8,8 +8,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -29,7 +27,6 @@ import com.rometools.rome.feed.synd.SyndEntry;
 @SpringBootApplication()
 public class NewsFeedApplication implements CommandLineRunner {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(NewsFeedApplication.class);
 	
 	@Value("${file.path}")
 	private String filePath;
@@ -76,7 +73,7 @@ public class NewsFeedApplication implements CommandLineRunner {
 		                	    		+ "\\" + getElementFromMessage(message.getPayload().toString(), "guid") + ".xml")
 		                	    .get()))
 						)
-				.log(LoggingHandler.Level.FATAL, "newsFeed.category", m -> ((SyndEntry)m.getPayload()).getUri())
+				.log(LoggingHandler.Level.INFO, "newsFeed.category", m -> ((SyndEntry)m.getPayload()).getUri())
                 .get();
 	}
 	
