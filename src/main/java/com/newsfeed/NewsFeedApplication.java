@@ -34,6 +34,12 @@ public class NewsFeedApplication implements CommandLineRunner {
 	
 	@Value("${source.uri}")
 	private String uri;
+	
+	@Value("${poll.messegares.max}")
+	private int maxMessagesPerPoll;
+	
+	@Value("${poll.checkRate}")
+	private int pollCheckRate;
 
 	public static void main(String[] args) {
 		SpringApplication.run(NewsFeedApplication.class, args);
@@ -50,7 +56,7 @@ public class NewsFeedApplication implements CommandLineRunner {
 	
 	@Bean(name = PollerMetadata.DEFAULT_POLLER)
     public  PollerMetadata poller() {
-        return Pollers.fixedRate(100).maxMessagesPerPoll(5).get();
+        return Pollers.fixedRate(pollCheckRate).maxMessagesPerPoll(maxMessagesPerPoll).get();
     }
 	
 	@Bean
