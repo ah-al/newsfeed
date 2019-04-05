@@ -1,6 +1,7 @@
 package com.newsfeed.entities;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.TimeZone;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -28,6 +29,9 @@ public class Item {
 		setDescription(entry.getDescription().getValue());
 		SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
 		formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+		if (entry.getPublishedDate() == null) {
+			entry.setPublishedDate(new Date());
+		}
 		setPubDate(formatter.format(entry.getPublishedDate()));
 		setCategory(entry.getCategories().get(0).getName());
 		setComments(entry.getComments());
