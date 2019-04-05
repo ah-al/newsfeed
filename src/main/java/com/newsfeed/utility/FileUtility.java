@@ -1,13 +1,11 @@
 package com.newsfeed.utility;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -18,21 +16,6 @@ import com.rometools.rome.feed.synd.SyndEntry;
 
 public class FileUtility {
 
-	private static SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");//EEE, dd MMM yyyy HH:mm:ss z
-	public static synchronized String getDirectoryPath(String paseDirectory, SyndEntry entry) {
-		if (entry.getPublishedDate() == null) {
-			entry.setPublishedDate(new Date());//When date returned as null from source.
-		}
-		File fileDirectory = new File(paseDirectory + dateFormatter.format(entry.getPublishedDate()));
-		if (!fileDirectory.exists()) {
-			fileDirectory.mkdir();
-		}
-		fileDirectory = new File(paseDirectory + dateFormatter.format(entry.getPublishedDate()) + "\\" +entry.getCategories().get(0).getName());
-		if (!fileDirectory.exists()) {
-			fileDirectory.mkdir();
-		}
-		return fileDirectory.getAbsolutePath();
-	}
 	
 	public static String convertObjectToXML(SyndEntry entry) {
 		Item item = new Item(entry);
@@ -54,22 +37,30 @@ public class FileUtility {
 		
 	}
 	
-	public static void saveEntryToFile (SyndEntry entry, String filesPath) {
-		
-		String directoryPath = FileUtility.getDirectoryPath(filesPath, entry);
-        Writer writer;
-		try {
-			writer = new FileWriter(directoryPath +"\\" + entry.getUri() +".xml");
+	public static String getDateFolderName(String message) {
+    	SimpleDateFormat dateFormatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");//yyyy-MM-dd
+    	String name = getElementFromMessage(message, "pubDate");
+    	try {
+			Date date = dateFormatter.parse(name);
+			dateFormatter = new SimpleDateFormat("yyyy-MM-dd");//
+			name = dateFormatter.format(date);
 			
-			String xml = convertObjectToXML(entry);
-			PrintWriter printWriter = new PrintWriter(writer);
-			printWriter.print(xml);
-			printWriter.close();
-
-	        writer.close();
-	        
-		} catch (IOException e) {
+		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-	}
+    	
+    	return name;
+    }
+    
+	public static String getElementFromMessage(String message, String elementId) {
+    	String name = "missing" + elementId;
+    	Pattern pattern = Pattern.compile("<" + elementId + ">(.*?)</" + elementId + ">");
+    	Matcher matcher = pattern.matcher(message);
+    	if (matcher.find())
+    	{
+    		name = matcher.group(1);
+    	}
+    	return name;
+    }
+	
 }

@@ -1,6 +1,8 @@
 package com.newsfeed;
 
-import static com.newsfeed.utility.FileUtility.saveEntryToFile;
+import static com.newsfeed.utility.FileUtility.convertObjectToXML;
+import static com.newsfeed.utility.FileUtility.getDateFolderName;
+import static com.newsfeed.utility.FileUtility.getElementFromMessage;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -17,10 +19,10 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.feed.inbound.FeedEntryMessageSource;
+import org.springframework.integration.file.dsl.Files;
+import org.springframework.integration.file.support.FileExistsMode;
+import org.springframework.integration.handler.LoggingHandler;
 import org.springframework.integration.scheduling.PollerMetadata;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.MessagingException;
 
 import com.rometools.rome.feed.synd.SyndEntry;
 
@@ -62,14 +64,20 @@ public class NewsFeedApplication implements CommandLineRunner {
 	@Bean
 	public IntegrationFlow flow() throws MalformedURLException {
 		return IntegrationFlows.from(new FeedEntryMessageSource(new URL(uri),"source"))
-				.handle(new MessageHandler() {
-
-					@Override
-					public void handleMessage(Message<?> message) throws MessagingException {
-						saveEntryToFile((SyndEntry) message.getPayload(), filePath);
-						LOGGER.info(((SyndEntry) message.getPayload()).getLink());
-					}
-				}).get();
+				.split()
+				.publishSubscribeChannel(c -> c
+						.subscribe(s -> s
+								.<SyndEntry, String>transform(e -> convertObjectToXML(e))
+								.handle(Files.outboundAdapter(new File(filePath))
+								.fileExistsMode(FileExistsMode.REPLACE)
+								.autoCreateDirectory(true)
+		                	    .fileNameGenerator(message -> getDateFolderName(message.getPayload().toString()) 
+		                	    		+ "\\" + getElementFromMessage(message.getPayload().toString(), "category") 
+		                	    		+ "\\" + getElementFromMessage(message.getPayload().toString(), "guid") + ".xml")
+		                	    .get()))
+						)
+				.log(LoggingHandler.Level.FATAL, "newsFeed.category", m -> ((SyndEntry)m.getPayload()).getUri())
+                .get();
 	}
-
+	
 }
